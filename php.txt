@@ -1,0 +1,43 @@
+<?php
+header('Content-Type: application/json');
+
+// Informations de connexion à la base de données
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "movie";
+
+// Créer une connexion
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Vérifier la connexion
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Récupérer le paramètre de recherche
+$query = isset($_GET['title']) ? $_GET['title'] : '';
+
+if ($query) {
+    // Préparer et exécuter la requête SQL
+    $sql = $conn->prepare("SELECT title, image FROM movies WHERE title LIKE ?");
+    $searchTerm = "%" . $query . "%";
+    $sql->bind_param("s", $searchTerm);
+    $sql->execute();
+    $result = $sql->get_result();
+
+    // Récupérer les résultats
+    $movies = [];
+    while ($row = $result->fetch_assoc()) {
+        $movies[] = $row;
+    }
+
+    // Retourner les résultats en JSON
+    echo json_encode(['movies' => $movies]);
+} else {
+    echo json_encode(['movies' => []]);
+}
+
+// Fermer la connexion
+$conn->close();
+?>
